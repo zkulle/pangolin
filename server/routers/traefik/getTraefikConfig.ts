@@ -162,7 +162,7 @@ export async function traefikConfigProvider(
                         ...additionalMiddlewares
                     ],
                     service: serviceName,
-                    rule: `Host(\`${fullDomain}\`)`,
+                    rule: convertUrlToTraefikRegex(fullDomain),
                     ...(resource.ssl ? { tls } : {})
                 };
 
@@ -173,7 +173,7 @@ export async function traefikConfigProvider(
                         ],
                         middlewares: [redirectHttpsMiddlewareName],
                         service: serviceName,
-                        rule: `Host(\`${fullDomain}\`)`
+                        rule: convertUrlToTraefikRegex(fullDomain),
                     };
                 }
 
@@ -291,4 +291,22 @@ export async function traefikConfigProvider(
             error: "Failed to build Traefik config"
         });
     }
+}
+
+function convertUrlToTraefikRegex(url: string): string {
+    // Check if the URL contains a wildcard
+    if (!url.includes('*')) {
+        return `Host(\`${url}\`)`;
+    }
+    
+    // Escape dots and replace wildcard with regex pattern
+    // Handle the case where * already has dots around it
+    const regexPattern = url
+        .replace(/\./g, '\\.')         // First escape all dots
+        .replace(/\\\.\*\\\./g, '.+\\.') // Replace \.*.\ with .+\.
+        .replace(/\*\\\./g, '.+\\.')     // Replace *.\ with .+\.
+        .replace(/\\\.\*/g, '\\.+')      // Replace \.* with \.+
+        .replace(/\*/g, '.+');           // Replace any remaining * with .+
+    
+    return `HostRegexp(\`^${regexPattern}$\`)`;
 }

@@ -62,8 +62,6 @@ import {
     SettingsSectionFooter
 } from "@app/components/Settings";
 import { SwitchInput } from "@app/components/SwitchInput";
-import { useSiteContext } from "@app/hooks/useSiteContext";
-import { InfoPopup } from "@app/components/ui/info-popup";
 
 // Regular expressions for validation
 const DOMAIN_REGEX =
@@ -132,9 +130,8 @@ export default function ReverseProxyTargets(props: {
         defaultValues: {
             ip: "",
             method: resource.http ? "http" : null,
-            port: ""
             // protocol: "TCP",
-        }
+        } as z.infer<typeof addTargetSchema>
     });
 
     useEffect(() => {

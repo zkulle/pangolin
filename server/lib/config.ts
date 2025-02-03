@@ -10,7 +10,6 @@ import {
     configFilePath1,
     configFilePath2
 } from "@server/lib/consts";
-import { loadAppVersion } from "@server/lib/loadAppVersion";
 import { passwordSchema } from "@server/auth/passwordSchema";
 import stoi from "./stoi";
 

@@ -16,7 +16,7 @@ import {
     userOrgs,
     users
 } from "@server/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import config from "@server/lib/config";
 import {
     createResourceSession,
@@ -94,7 +94,7 @@ export async function verifyResourceSession(
             | undefined = cache.get(resourceCacheKey);
 
         if (!resourceData) {
-            const [result] = await db
+            const multiResult = await db
                 .select()
                 .from(resources)
                 .leftJoin(
@@ -105,13 +105,15 @@ export async function verifyResourceSession(
                     resourcePassword,
                     eq(resourcePassword.resourceId, resources.resourceId)
                 )
-                .where(eq(resources.fullDomain, host))
+                .where(or(eq(resources.fullDomain, host), eq(resources.fullDomain, replaceDomainWithWildcard(host))))
                 .limit(1);
 
-            if (!result) {
+            if (!multiResult) {
                 logger.debug("Resource not found", host);
                 return notAllowed(res);
             }
+
+            const result = multiResult[0]; // TODO: should we always pick the first one?
 
             resourceData = {
                 resource: result.resources,
@@ -437,4 +439,32 @@ async function isUserAllowedToAccessResource(
     }
 
     return false;
+}
+
+function replaceDomainWithWildcard(domain: string): string {
+    // Split the domain into parts
+    const parts = domain.split('.');
+    
+    // List of known TLDs that have two parts (e.g., co.uk, com.br)
+    const specialTLDs = new Set([
+        'co.uk', 'com.br', 'com.au', 'org.uk', 'net.uk', 
+        'co.nz', 'co.jp', 'co.kr', 'com.mx', 'com.ar'
+    ]);
+    
+    // Check if we're dealing with a special TLD
+    const lastTwoParts = parts.slice(-2).join('.');
+    const isSpecialTLD = specialTLDs.has(lastTwoParts);
+    
+    // Calculate how many parts to keep from the end
+    // For special TLDs like co.uk, we keep 3 parts (domain.co.uk)
+    // For normal TLDs like .com, we keep 2 parts (example.com)
+    const partsToKeep = isSpecialTLD ? 3 : 2;
+    
+    // If we don't have more parts than we need to keep, return as is
+    if (parts.length <= partsToKeep) {
+        return domain;
+    }
+    
+    // Replace only the leftmost subdomain with *
+    return ['*', ...parts.slice(1)].join('.');
 }
