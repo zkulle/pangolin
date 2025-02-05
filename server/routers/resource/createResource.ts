@@ -55,9 +55,9 @@ const createResourceSchema = z
     )
     .refine(
         (data) => {
-            // if (data.http) {
-                // return subdomainSchema.safeParse(data.subdomain).success;
-            // }
+            if (data.http) {
+                return subdomainSchema.safeParse(data.subdomain).success;
+            }
             return true;
         },
         {
