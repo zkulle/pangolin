@@ -59,6 +59,8 @@ export async function traefikConfigProvider(
             )
             .groupBy(resources.resourceId);
 
+        logger.debug(JSON.stringify(allResources, null, 2));
+
         if (!allResources.length) {
             return res.status(HttpCode.OK).json({});
         }
@@ -149,7 +151,9 @@ export async function traefikConfigProvider(
                         : {})
                 };
 
-                logger.debug(config.getRawConfig().traefik.prefer_wildcard_cert)
+                logger.debug(
+                    config.getRawConfig().traefik.prefer_wildcard_cert
+                );
 
                 const additionalMiddlewares =
                     config.getRawConfig().traefik.additional_middlewares || [];
@@ -176,7 +180,7 @@ export async function traefikConfigProvider(
                         ],
                         middlewares: [redirectHttpsMiddlewareName],
                         service: serviceName,
-                        rule: convertUrlToTraefikRegex(fullDomain),
+                        rule: convertUrlToTraefikRegex(fullDomain)
                     };
                 }
 
@@ -298,18 +302,18 @@ export async function traefikConfigProvider(
 
 function convertUrlToTraefikRegex(url: string): string {
     // Check if the URL contains a wildcard
-    if (!url.includes('*')) {
+    if (!url.includes("*")) {
         return `Host(\`${url}\`)`;
     }
-    
+
     // Escape dots and replace wildcard with regex pattern
     // Handle the case where * already has dots around it
     const regexPattern = url
-        .replace(/\./g, '\\.')         // First escape all dots
-        .replace(/\\\.\*\\\./g, '.+\\.') // Replace \.*.\ with .+\.
-        .replace(/\*\\\./g, '.+\\.')     // Replace *.\ with .+\.
-        .replace(/\\\.\*/g, '\\.+')      // Replace \.* with \.+
-        .replace(/\*/g, '.+');           // Replace any remaining * with .+
-    
+        .replace(/\./g, "\\.") // First escape all dots
+        .replace(/\\\.\*\\\./g, ".+\\.") // Replace \.*.\ with .+\.
+        .replace(/\*\\\./g, ".+\\.") // Replace *.\ with .+\.
+        .replace(/\\\.\*/g, "\\.+") // Replace \.* with \.+
+        .replace(/\*/g, ".+"); // Replace any remaining * with .+
+
     return `HostRegexp(\`^${regexPattern}$\`)`;
 }
