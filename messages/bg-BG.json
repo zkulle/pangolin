@@ -1,6 +1,6 @@
 {
-    "setupCreate": "Create your organization, site, and resources",
-    "setupNewOrg": "New Organization",
+    "setupCreate": "Създайте своя организация, сайт и ресурси",
+    "setupNewOrg": "Нова организация",
     "setupCreateOrg": "Create Organization",
     "setupCreateResources": "Create Resources",
     "setupOrgName": "Organization Name",
